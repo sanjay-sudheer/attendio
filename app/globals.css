@@ -121,71 +121,25 @@
   }
 }
 
-@theme inline {
-  --animate-spotlight: spotlight 2s ease 0.75s 1 forwards;
-  --animate-fade-in: fade-in 0.8s ease-out forwards;
-  --animate-slide-up: slide-up 0.6s ease-out forwards;
-}
-
-@keyframes spotlight {
-  0% {
-    opacity: 0;
-    transform: translate(-72%, -62%) scale(0.5);
+  /* Fingerprint illustration animations */
+  @keyframes fp-float {
+    0%,100% { transform: translateY(0px); }
+    50% { transform: translateY(-18px); }
   }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, -40%) scale(1);
+  @keyframes fp-pulse-ring {
+    0% { transform: scale(0.6); opacity: 0.55; }
+    70% { transform: scale(1); opacity: 0; }
+    100% { transform: scale(1); opacity: 0; }
   }
-}
-
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
+  @keyframes fp-glow {
+    0%,100% { opacity: .65; filter: blur(30px); }
+    50% { opacity: .9; filter: blur(40px); }
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes slide-up {
-  0% {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+  .fp-animate-wrapper { animation: fp-float 9s ease-in-out infinite; }
+  .fp-glow { animation: fp-glow 6s ease-in-out infinite; }
+  .fp-pulse-rings span { position:absolute; inset:0; border-radius:9999px; border:2px solid rgba(255,255,255,0.25); animation: fp-pulse-ring 4.5s ease-out infinite; }
+  .fp-pulse-rings span:nth-child(2){ animation-delay:1.5s; }
+  .fp-pulse-rings span:nth-child(3){ animation-delay:3s; }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Custom button animations */
-.btn-hover-scale {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-hover-scale:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-}
-
-/* Card hover effects */
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-}
-
-/* Typography improvements */
-.text-balance {
-  text-wrap: balance;
-}
 

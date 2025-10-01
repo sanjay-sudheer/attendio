@@ -7,8 +7,13 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white text-gray-900">
       {/* Navbar */}
-  <nav className="flex justify-between items-center px-8 py-6 fixed w-full z-50 text-gray-900 bg-gradient-to-b from-white/80 via-white/40 to-transparent backdrop-blur-md">
-        <h1 className="text-2xl font-bold text-gray-900">Attendio</h1>
+  <nav className="flex justify-between items-center px-8 py-5 fixed w-full z-50 text-gray-900 bg-gradient-to-b from-white/80 via-white/40 to-transparent backdrop-blur-md">
+        <a href="/" className="flex items-center gap-3 group">
+          <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600/10 ring-1 ring-indigo-200 group-hover:bg-indigo-600/20 transition">
+            <img src="/fingerprint.svg" alt="Attendio" className="h-6 w-6 text-indigo-600" />
+          </span>
+          <span className="text-xl font-semibold tracking-tight">Attendio</span>
+        </a>
         <a
           href="/admin-login"
           className="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors"
@@ -22,8 +27,15 @@ export default function Home() {
         {/* Subtle gradient background */}
   <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-gray-100/50" />
         
-        {/* Minimal spotlight effect */}
-        <Spotlight className="-top-40 left-0 md:-top-20 md:left-60 opacity-30" fill="#6366f1" />
+        {/* Enhanced brand spotlight */}
+        <Spotlight
+          className="-top-64 -left-32 md:-top-48 md:left-24 opacity-100"
+          fill="#6366f1"
+          opacity={0.22}
+          blur={220}
+          gradient
+          mode="light"
+        />
         
         {/* Hero Content */}
         <div className="relative z-10 text-center max-w-4xl mx-auto animate-fade-in">
