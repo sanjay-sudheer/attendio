@@ -77,20 +77,10 @@ export default function UnifiedDashboard() {
     }
   };
 
-  // Don't render dashboard until auth is checked
-  if (!authChecked || !currentUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-gray-600">Verifying authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
   // Subscribe to employees from RTDB
   useEffect(() => {
+    if (!authChecked || !currentUser) return;
+    
     const employeesRef = ref(rtdb, "employees");
     const unsub = onValue(employeesRef, (snap) => {
       const data = snap.val() || {};
@@ -103,10 +93,12 @@ export default function UnifiedDashboard() {
       setLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, [authChecked, currentUser]);
 
   // Subscribe to today's attendance for all employees
   useEffect(() => {
+    if (!authChecked || !currentUser) return;
+    
     const today = new Date().toISOString().split("T")[0].replace(/-/g, ''); // Format: 20251002
     const attendanceRef = ref(rtdb, "attendance");
     
@@ -124,10 +116,12 @@ export default function UnifiedDashboard() {
     });
     
     return () => unsub();
-  }, []);
+  }, [authChecked, currentUser]);
 
   // Subscribe to enrollment mode and ID
   useEffect(() => {
+    if (!authChecked || !currentUser) return;
+    
     const modeRef = ref(rtdb, "enrollmentMode");
     const idRef = ref(rtdb, "enrollmentID");
     
@@ -143,7 +137,19 @@ export default function UnifiedDashboard() {
       unsubMode();
       unsubID();
     };
-  }, []);
+  }, [authChecked, currentUser]);
+
+  // Don't render dashboard until auth is checked
+  if (!authChecked || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+          <p className="text-gray-600">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-gray-50 p-6">
