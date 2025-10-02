@@ -1,7 +1,11 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import { rtdb } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { rtdb, auth } from "@/lib/firebase";
 import { ref, set, onValue, remove, update, get } from "firebase/database";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,12 +22,16 @@ import {
   Edit,
   Save,
   Trash2,
-  X as XIcon
+  X as XIcon,
+  LogOut
 } from "lucide-react";
 
 function cls(...c) { return c.filter(Boolean).join(" "); }
 
 export default function UnifiedDashboard() {
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [enrollmentMode, setEnrollmentMode] = useState(false);
   const [enrollmentID, setEnrollmentID] = useState(null);
@@ -33,6 +41,53 @@ export default function UnifiedDashboard() {
   const [deletingEmployee, setDeletingEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [todayAttendance, setTodayAttendance] = useState({});
+
+  // Auth protection
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        router.push("/admin-login");
+        return;
+      }
+      
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (!userDoc.exists() || userDoc.data().role !== "admin") {
+          await signOut(auth);
+          router.push("/admin-login");
+          return;
+        }
+        setCurrentUser(user);
+        setAuthChecked(true);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        router.push("/admin-login");
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/admin-login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  // Don't render dashboard until auth is checked
+  if (!authChecked || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+          <p className="text-gray-600">Verifying authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Subscribe to employees from RTDB
   useEffect(() => {
@@ -103,13 +158,23 @@ export default function UnifiedDashboard() {
               Manage employees, track enrollment, and view individual reports
             </p>
           </div>
-          <Button 
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-indigo-600 hover:bg-indigo-500"
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Employee
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-indigo-600 hover:bg-indigo-500"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Employee
+            </Button>
+            <Button 
+              onClick={handleLogout}
+              variant="outline"
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </header>
 
         {/* Add Employee Form */}
