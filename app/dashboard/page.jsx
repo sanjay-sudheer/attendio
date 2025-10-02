@@ -152,22 +152,22 @@ export default function UnifiedDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50/30 to-gray-50 p-3 sm:p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <header className="flex flex-col gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
               Employee Dashboard
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
               Manage employees, track enrollment, and view individual reports
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <Button 
               onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-indigo-600 hover:bg-indigo-500"
+              className="bg-indigo-600 hover:bg-indigo-500 w-full sm:w-auto"
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Add Employee
@@ -175,7 +175,7 @@ export default function UnifiedDashboard() {
             <Button 
               onClick={handleLogout}
               variant="outline"
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 w-full sm:w-auto"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -193,22 +193,22 @@ export default function UnifiedDashboard() {
 
         {/* Enrollment Status Banner */}
         {enrollmentMode && enrollmentID && (
-          <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 backdrop-blur shadow-sm p-4">
-            <div className="flex items-center gap-3">
-              <div className="animate-pulse h-3 w-3 rounded-full bg-indigo-600"></div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-indigo-900">Enrollment in Progress</h3>
-                <p className="text-sm text-indigo-700">
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50/70 backdrop-blur shadow-sm p-3 sm:p-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="animate-pulse h-3 w-3 rounded-full bg-indigo-600 flex-shrink-0 mt-1 sm:mt-0"></div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-indigo-900 text-sm sm:text-base">Enrollment in Progress</h3>
+                <p className="text-xs sm:text-sm text-indigo-700 break-words">
                   Enrolling employee ID: <span className="font-mono font-medium">{enrollmentID}</span> - Place finger on sensor now
                 </p>
               </div>
-              <AlertCircle className="h-5 w-5 text-indigo-600" />
+              <AlertCircle className="h-5 w-5 text-indigo-600 flex-shrink-0" />
             </div>
           </div>
         )}
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard 
             icon={Users} 
             label="Total Employees" 
@@ -330,55 +330,59 @@ function AddEmployeeForm({ onSuccess, onCancel }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Add New Employee</h2>
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-4 sm:p-6">
+      <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Add New Employee</h2>
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <Label htmlFor="employeeId">Employee ID *</Label>
+          <Label htmlFor="employeeId" className="text-sm">Employee ID *</Label>
           <Input 
             id="employeeId" 
             name="employeeId" 
             value={form.employeeId} 
             onChange={onChange} 
             required 
-            placeholder="e.g. E1001" 
+            placeholder="e.g. E1001"
+            className="text-sm"
           />
         </div>
         <div>
-          <Label htmlFor="name">Full Name *</Label>
+          <Label htmlFor="name" className="text-sm">Full Name *</Label>
           <Input 
             id="name" 
             name="name" 
             value={form.name} 
             onChange={onChange} 
             required 
-            placeholder="Jane Doe" 
+            placeholder="Jane Doe"
+            className="text-sm"
           />
         </div>
         <div>
-          <Label htmlFor="startTime">Start Time *</Label>
+          <Label htmlFor="startTime" className="text-sm">Start Time *</Label>
           <Input 
             id="startTime" 
             type="time"
             name="startTime" 
             value={form.startTime} 
             onChange={onChange} 
-            required 
+            required
+            className="text-sm"
           />
         </div>
         <div>
-          <Label htmlFor="endTime">End Time *</Label>
+          <Label htmlFor="endTime" className="text-sm">End Time *</Label>
           <Input 
             id="endTime" 
             type="time"
             name="endTime" 
             value={form.endTime} 
             onChange={onChange} 
-            required 
+            required
+            className="text-sm"
           />
         </div>
-        <div className="md:col-span-2">
-          <Label htmlFor="maxHalfDayCutMinutes">Max Half-Day Cut (minutes late) *</Label>
+        <div className="sm:col-span-2">
+          <Label htmlFor="maxHalfDayCutMinutes" className="text-sm">Max Half-Day Cut (minutes late) *</Label>
           <Input 
             id="maxHalfDayCutMinutes" 
             type="number"
@@ -388,19 +392,20 @@ function AddEmployeeForm({ onSuccess, onCancel }) {
             required 
             min="0"
             placeholder="e.g. 120 (2 hours)"
+            className="text-sm"
           />
         </div>
         {error && (
-          <div className="md:col-span-2 text-sm text-red-600 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4" />
-            {error}
+          <div className="sm:col-span-2 text-xs sm:text-sm text-red-600 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>{error}</span>
           </div>
         )}
-        <div className="md:col-span-2 flex items-center gap-3">
-          <Button type="submit" disabled={loading}>
+        <div className="sm:col-span-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+          <Button type="submit" disabled={loading} className="w-full sm:w-auto">
             {loading ? "Adding..." : "Add & Enroll"}
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
             Cancel
           </Button>
         </div>
@@ -470,8 +475,8 @@ function EmployeeList({ employees, todayAttendance, onSelectEmployee, onEditEmpl
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 bg-white/60">
-        <h2 className="font-semibold text-gray-900">All Employees ({employees.length})</h2>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white/60">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900">All Employees ({employees.length})</h2>
       </div>
       <div className="divide-y divide-gray-100">
         {employees.map((emp) => {
@@ -481,9 +486,77 @@ function EmployeeList({ employees, todayAttendance, onSelectEmployee, onEditEmpl
           return (
             <div
               key={emp.id}
-              className="px-6 py-4 hover:bg-indigo-50/50 transition-colors"
+              className="px-4 sm:px-6 py-3 sm:py-4 hover:bg-indigo-50/50 transition-colors"
             >
-              <div className="flex items-center justify-between">
+              {/* Mobile Layout */}
+              <div className="block lg:hidden space-y-3">
+                <div 
+                  className="flex items-center gap-3 cursor-pointer"
+                  onClick={() => onSelectEmployee(emp)}
+                >
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-indigo-700 font-semibold text-sm sm:text-base">
+                      {emp.name?.charAt(0)?.toUpperCase() || "?"}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 truncate text-sm sm:text-base">{emp.name}</h3>
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                      <span className="truncate">ID: {emp.id}</span>
+                      {emp.device_slot && (
+                        <>
+                          <span>•</span>
+                          <span>Slot: {emp.device_slot}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <AttendanceBadge status={attendanceStatus.status} label={attendanceStatus.label} />
+                    <EnrollmentBadge status={enrollStatus} />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditEmployee(emp);
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-3.5 w-3.5" />
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteEmployee(emp);
+                      }}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 w-8 p-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {attendanceStatus.time && (
+                  <div className="text-xs text-gray-500 pl-13">
+                    In: {attendanceStatus.time.in}
+                    {attendanceStatus.time.out && (
+                      <> • Out: {attendanceStatus.time.out}</>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop Layout */}
+              <div className="hidden lg:flex items-center justify-between">
                 <div 
                   className="flex items-center gap-4 flex-1 cursor-pointer"
                   onClick={() => onSelectEmployee(emp)}
@@ -611,19 +684,20 @@ function StatCard({ icon: Icon, label, value, color }) {
   const colors = {
     indigo: "bg-indigo-50 text-indigo-700 ring-indigo-200",
     green: "bg-green-50 text-green-700 ring-green-200",
+    blue: "bg-blue-50 text-blue-700 ring-blue-200",
     amber: "bg-amber-50 text-amber-700 ring-amber-200",
     gray: "bg-gray-50 text-gray-700 ring-gray-200",
   };
   
   return (
-    <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-600">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+    <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-3 sm:p-4 md:p-5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs sm:text-sm text-gray-600 truncate">{label}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-0.5 sm:mt-1">{value}</p>
         </div>
-        <div className={cls("h-12 w-12 rounded-lg flex items-center justify-center ring-1", colors[color])}>
-          <Icon className="h-6 w-6" />
+        <div className={cls("h-10 w-10 sm:h-12 sm:w-12 rounded-lg flex items-center justify-center ring-1 flex-shrink-0", colors[color])}>
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </div>
     </div>
@@ -779,30 +853,31 @@ function IndividualReport({ employee, onClose }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={onClose}
-            className="h-10 w-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition"
+            className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg hover:bg-gray-100 flex items-center justify-center transition flex-shrink-0"
           >
             ←
           </button>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{employee.name}</h2>
-            <p className="text-gray-600">ID: {employee.employeeID || employee.id}</p>
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{employee.name}</h2>
+            <p className="text-sm sm:text-base text-gray-600">ID: {employee.employeeID || employee.id}</p>
           </div>
         </div>
         <EnrollmentBadge status={employee.enrollmentStatus} />
       </div>
 
       {/* View Selector */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mb-2">
         <Button
           onClick={() => setView("today")}
           variant={view === "today" ? "default" : "outline"}
           size="sm"
+          className="whitespace-nowrap"
         >
           Today
         </Button>
@@ -810,6 +885,7 @@ function IndividualReport({ employee, onClose }) {
           onClick={() => setView("month")}
           variant={view === "month" ? "default" : "outline"}
           size="sm"
+          className="whitespace-nowrap"
         >
           This Month
         </Button>
@@ -817,6 +893,7 @@ function IndividualReport({ employee, onClose }) {
           onClick={() => setView("custom")}
           variant={view === "custom" ? "default" : "outline"}
           size="sm"
+          className="whitespace-nowrap"
         >
           Custom Range
         </Button>
@@ -824,24 +901,26 @@ function IndividualReport({ employee, onClose }) {
 
       {/* Custom Date Range Selector */}
       {view === "custom" && (
-        <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-4 flex flex-wrap gap-4 items-end">
-          <div>
-            <Label htmlFor="customStart">Start Date</Label>
+        <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-3 sm:p-4 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end">
+          <div className="flex-1">
+            <Label htmlFor="customStart" className="text-sm">Start Date</Label>
             <Input
               id="customStart"
               type="date"
               value={customStart}
               onChange={(e) => setCustomStart(e.target.value)}
+              className="text-sm"
             />
           </div>
-          <div>
-            <Label htmlFor="customEnd">End Date</Label>
+          <div className="flex-1">
+            <Label htmlFor="customEnd" className="text-sm">End Date</Label>
             <Input
               id="customEnd"
               type="date"
               value={customEnd}
               onChange={(e) => setCustomEnd(e.target.value)}
               min={customStart}
+              className="text-sm"
             />
           </div>
         </div>
@@ -849,28 +928,28 @@ function IndividualReport({ employee, onClose }) {
 
       {/* Today's Status */}
       {view === "today" && (
-        <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-6">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-indigo-600" />
-            Today's Attendance ({new Date().toLocaleDateString()})
+        <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
+            <span className="truncate">Today's Attendance ({new Date().toLocaleDateString()})</span>
           </h3>
           {loading ? (
-            <p className="text-gray-500">Loading...</p>
+            <p className="text-sm text-gray-500">Loading...</p>
           ) : todayAttendance ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Status</p>
-                  <p className="text-lg font-semibold text-green-600">Present</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Status</p>
+                  <p className="text-base sm:text-lg font-semibold text-green-600">Present</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Check In</p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-xs sm:text-sm text-gray-600">Check In</p>
+                  <p className="text-base sm:text-lg font-semibold text-gray-900">
                     {formatTime(todayAttendance.in)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Check Out</p>
+                  <p className="text-xs sm:text-sm text-gray-600">Check Out</p>
                   <p className="text-lg font-semibold text-gray-900">
                     {formatTime(todayAttendance.out)}
                   </p>
@@ -1116,105 +1195,109 @@ function EditEmployeeModal({ employee, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Employee</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Employee</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <XIcon className="h-6 w-6" />
+            <XIcon className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <Label htmlFor="employeeId">Employee ID</Label>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="sm:col-span-2">
+            <Label htmlFor="employeeId" className="text-sm">Employee ID</Label>
             <Input 
               id="employeeId" 
               value={employee.id} 
               disabled 
-              className="bg-gray-100"
+              className="bg-gray-100 text-sm"
             />
           </div>
           <div>
-            <Label htmlFor="name">Full Name *</Label>
+            <Label htmlFor="name" className="text-sm">Full Name *</Label>
             <Input 
               id="name" 
               name="name" 
               value={form.name} 
               onChange={onChange} 
               required 
-              placeholder="Jane Doe" 
+              placeholder="Jane Doe"
+              className="text-sm"
             />
           </div>
           <div>
-            <Label htmlFor="deviceSlot">Device Slot</Label>
+            <Label htmlFor="deviceSlot" className="text-sm">Device Slot</Label>
             <Input 
               id="deviceSlot" 
               value={employee.device_slot || "Not assigned"} 
               disabled 
-              className="bg-gray-100"
+              className="bg-gray-100 text-sm"
             />
           </div>
           <div>
-            <Label htmlFor="startTime">Start Time *</Label>
+            <Label htmlFor="startTime" className="text-sm">Start Time *</Label>
             <Input 
               id="startTime" 
               type="time"
               name="startTime" 
               value={form.startTime} 
               onChange={onChange} 
-              required 
+              required
+              className="text-sm"
             />
           </div>
           <div>
-            <Label htmlFor="endTime">End Time *</Label>
+            <Label htmlFor="endTime" className="text-sm">End Time *</Label>
             <Input 
               id="endTime" 
               type="time"
               name="endTime" 
               value={form.endTime} 
               onChange={onChange} 
-              required 
+              required
+              className="text-sm"
             />
           </div>
-          <div className="md:col-span-2">
-            <Label htmlFor="maxHalfDayCutMinutes">Max Half-Day Cut (minutes late) *</Label>
+          <div className="sm:col-span-2">
+            <Label htmlFor="maxHalfDayCutMinutes" className="text-sm">Max Half-Day Cut (minutes late) *</Label>
             <Input 
               id="maxHalfDayCutMinutes" 
               type="number"
               name="maxHalfDayCutMinutes" 
               value={form.maxHalfDayCutMinutes} 
               onChange={onChange} 
-              required 
+              required
+              className="text-sm" 
               min="0"
               placeholder="e.g. 120 (2 hours)"
             />
           </div>
           {employee.enrolled_at && (
-            <div className="md:col-span-2">
-              <Label>Enrolled At</Label>
+            <div className="sm:col-span-2">
+              <Label className="text-sm">Enrolled At</Label>
               <Input 
                 value={employee.enrolled_at} 
                 disabled 
-                className="bg-gray-100"
+                className="bg-gray-100 text-sm"
               />
             </div>
           )}
           {error && (
-            <div className="md:col-span-2 text-sm text-red-600 flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              {error}
+            <div className="sm:col-span-2 text-xs sm:text-sm text-red-600 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
             </div>
           )}
-          <div className="md:col-span-2 flex items-center gap-3">
-            <Button type="submit" disabled={loading}>
+          <div className="sm:col-span-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               <Save className="h-4 w-4 mr-2" />
               {loading ? "Saving..." : "Save Changes"}
             </Button>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} className="w-full sm:w-auto">
               Cancel
             </Button>
           </div>
@@ -1259,56 +1342,56 @@ function DeleteConfirmationModal({ employee, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-red-600">Delete Employee</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-red-600">Delete Employee</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <XIcon className="h-6 w-6" />
+            <XIcon className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
-        <div className="mb-6">
-          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-200 mb-4">
-            <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-red-900">Warning: This action cannot be undone!</p>
-              <p className="text-sm text-red-700 mt-1">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-50 rounded-lg border border-red-200 mb-3 sm:mb-4">
+            <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-sm sm:text-base font-semibold text-red-900">Warning: This action cannot be undone!</p>
+              <p className="text-xs sm:text-sm text-red-700 mt-1">
                 All attendance records will also be permanently deleted.
               </p>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">You are about to delete:</p>
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+            <p className="text-xs sm:text-sm text-gray-600 mb-2">You are about to delete:</p>
             <div className="space-y-1">
-              <p className="font-semibold text-gray-900">{employee.name}</p>
-              <p className="text-sm text-gray-600">ID: {employee.id}</p>
+              <p className="text-sm sm:text-base font-semibold text-gray-900 truncate">{employee.name}</p>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">ID: {employee.id}</p>
               {employee.device_slot && (
-                <p className="text-sm text-gray-600">Device Slot: {employee.device_slot}</p>
+                <p className="text-xs sm:text-sm text-gray-600">Device Slot: {employee.device_slot}</p>
               )}
               {employee.fingerprint_enrolled === "true" && (
-                <p className="text-sm text-green-600">✓ Fingerprint Enrolled</p>
+                <p className="text-xs sm:text-sm text-green-600">✓ Fingerprint Enrolled</p>
               )}
             </div>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 flex items-center gap-2 p-3 bg-red-50 rounded-lg">
-            <AlertCircle className="h-4 w-4" />
-            {error}
+          <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-red-600 flex items-start gap-2 p-2 sm:p-3 bg-red-50 rounded-lg">
+            <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+            <span>{error}</span>
           </div>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <Button
             onClick={handleDelete}
             disabled={loading}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white w-full sm:w-auto"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             {loading ? "Deleting..." : "Delete Permanently"}
@@ -1318,7 +1401,7 @@ function DeleteConfirmationModal({ employee, onClose, onSuccess }) {
             variant="outline"
             onClick={onClose}
             disabled={loading}
-            className="flex-1"
+            className="flex-1 w-full sm:w-auto"
           >
             Cancel
           </Button>
