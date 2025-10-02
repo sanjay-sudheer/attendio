@@ -41,6 +41,61 @@ export default function UnifiedDashboard() {
   const [deletingEmployee, setDeletingEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [todayAttendance, setTodayAttendance] = useState({});
+  
+  // Get current date in LOCAL timezone, not UTC
+  const getCurrentLocalDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [currentDate, setCurrentDate] = useState(() => getCurrentLocalDate());
+
+  // Check if date has changed (runs every minute)
+  useEffect(() => {
+    const checkDateChange = () => {
+      const newDate = getCurrentLocalDate();
+      console.log(`Current date check: ${newDate}, Stored date: ${currentDate}`);
+      if (newDate !== currentDate) {
+        console.log(`🔄 Date changed from ${currentDate} to ${newDate}`);
+        setCurrentDate(newDate);
+        // Force refresh of attendance data
+        setTodayAttendance({});
+      }
+    };
+
+    // Check immediately on mount
+    checkDateChange();
+    
+    // Check every minute if the date has changed
+    const interval = setInterval(checkDateChange, 60000);
+    
+    // Also schedule a check at midnight
+    const scheduleMidnightCheck = () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 10, 0); // 10 seconds after midnight
+      
+      const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+      
+      return setTimeout(() => {
+        console.log("Midnight check triggered");
+        checkDateChange();
+        // Schedule next midnight check
+        scheduleMidnightCheck();
+      }, timeUntilMidnight);
+    };
+    
+    const midnightTimeout = scheduleMidnightCheck();
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(midnightTimeout);
+    };
+  }, [currentDate]);
 
   // Auth protection
   useEffect(() => {
@@ -95,28 +150,117 @@ export default function UnifiedDashboard() {
     return () => unsub();
   }, [authChecked, currentUser]);
 
+  // Auto-close previous day's attendance for employees who didn't check out
+  // This runs at midnight or when dashboard loads with unclosed previous day records
+  useEffect(() => {
+    if (!authChecked || !currentUser) return;
+    
+    const autoClosePreviousDaysAttendance = async () => {
+      try {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayKey = `${year}${month}${day}`; // Format: 20251003 in LOCAL timezone
+        
+        console.log(`🔍 Checking for unclosed attendance records. Today is: ${todayKey} (Local: ${year}-${month}-${day})`);
+        
+        const attendanceRef = ref(rtdb, "attendance");
+        const snapshot = await get(attendanceRef);
+        const data = snapshot.val() || {};
+        
+        if (!data || Object.keys(data).length === 0) {
+          console.log("No attendance data found in database");
+          return;
+        }
+        
+        // Check each employee's attendance for all previous days
+        const updates = {};
+        let foundRecords = 0;
+        
+        Object.entries(data).forEach(([empId, records]) => {
+          if (!records) return;
+          
+          Object.entries(records).forEach(([dateKey, record]) => {
+            // Only process dates before today
+            if (dateKey < todayKey) {
+              foundRecords++;
+              
+              // Check both field name patterns: 'in'/'out' AND 'checkIn'/'checkOut'
+              const hasCheckIn = record.in || record.checkIn;
+              const hasCheckOut = record.out || record.checkOut;
+              const isAutoClosed = record.autoClosedBySystem;
+              
+              console.log(`Checking employee ${empId} on ${dateKey}: in=${record.in}, out=${record.out}, checkIn=${record.checkIn}, checkOut=${record.checkOut}, autoClosedBySystem=${isAutoClosed}`);
+              
+              // If checked in but no checkout time and not already auto-closed
+              if (hasCheckIn && !hasCheckOut && !isAutoClosed) {
+                // Set checkout to end of that day (23:59:59)
+                const checkOutTime = "23:59:59";
+                
+                // Use the same field name pattern that exists in the record
+                if (record.in) {
+                  updates[`attendance/${empId}/${dateKey}/out`] = checkOutTime;
+                } else if (record.checkIn) {
+                  updates[`attendance/${empId}/${dateKey}/checkOut`] = checkOutTime;
+                }
+                updates[`attendance/${empId}/${dateKey}/autoClosedBySystem`] = true;
+                console.log(`✅ Auto-closing attendance for employee ${empId} on ${dateKey} with checkout time ${checkOutTime}`);
+              }
+            }
+          });
+        });
+        
+        console.log(`Found ${foundRecords} previous day records, ${Object.keys(updates).length / 2} need auto-closing`);
+        
+        // Apply all updates at once
+        if (Object.keys(updates).length > 0) {
+          await update(ref(rtdb), updates);
+          console.log(`✅ Successfully auto-closed ${Object.keys(updates).length / 2} attendance records from previous days`);
+        } else {
+          console.log("No unclosed attendance records found that need auto-closing");
+        }
+      } catch (error) {
+        console.error("❌ Error auto-closing previous days attendance:", error);
+      }
+    };
+    
+    // Run on dashboard load and when date changes
+    autoClosePreviousDaysAttendance();
+  }, [authChecked, currentUser, currentDate]);
+
   // Subscribe to today's attendance for all employees
   useEffect(() => {
     if (!authChecked || !currentUser) return;
     
-    const today = new Date().toISOString().split("T")[0].replace(/-/g, ''); // Format: 20251002
+    const todayKey = currentDate.replace(/-/g, ''); // Use currentDate state, Format: 20251003
     const attendanceRef = ref(rtdb, "attendance");
+    
+    console.log(`📊 Subscribing to attendance data for date: ${todayKey} (${currentDate})`);
     
     const unsub = onValue(attendanceRef, (snap) => {
       const data = snap.val() || {};
       const todayData = {};
       
       Object.entries(data).forEach(([empId, records]) => {
-        if (records[today]) {
-          todayData[empId] = records[today];
+        if (records[todayKey]) {
+          const record = records[todayKey];
+          // Normalize field names: support both 'in'/'out' AND 'checkIn'/'checkOut'
+          todayData[empId] = {
+            checkIn: record.checkIn || record.in,
+            checkOut: record.checkOut || record.out,
+            autoClosedBySystem: record.autoClosedBySystem
+          };
+          console.log(`Found attendance for employee ${empId} on ${todayKey}:`, todayData[empId]);
         }
       });
       
+      console.log(`📈 Today's attendance count: ${Object.keys(todayData).length} employees`);
       setTodayAttendance(todayData);
     });
     
     return () => unsub();
-  }, [authChecked, currentUser]);
+  }, [authChecked, currentUser, currentDate]);
 
   // Subscribe to enrollment mode and ID
   useEffect(() => {
@@ -162,6 +306,9 @@ export default function UnifiedDashboard() {
             </h1>
             <p className="text-sm sm:text-base text-gray-600 mt-1">
               Manage employees, track enrollment, and view individual reports
+              <span className="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs font-mono">
+                Tracking: {currentDate} ({currentDate.replace(/-/g, '')})
+              </span>
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -436,12 +583,12 @@ function EmployeeList({ employees, todayAttendance, onSelectEmployee, onEditEmpl
 
   function calculateAttendanceStatus(emp) {
     const attendance = todayAttendance[emp.id];
-    if (!attendance || !attendance.in) {
+    if (!attendance || !attendance.checkIn) {
       return { status: "absent", label: "Absent", color: "red", time: null };
     }
 
-    const inTime = attendance.in; // Format: "03:36:54"
-    const outTime = attendance.out;
+    const inTime = attendance.checkIn; // Format: "17:45:36"
+    const outTime = attendance.checkOut;
 
     // Calculate if late
     const startTime = emp.startTime || "09:00";
@@ -722,12 +869,33 @@ function IndividualReport({ employee, onClose }) {
   async function loadAttendanceData() {
     setLoading(true);
     try {
-      const today = new Date().toISOString().split("T")[0].replace(/-/g, ''); // Format: 20251002
+      // Get today's date in LOCAL timezone
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const today = `${year}${month}${day}`; // Format: 20251003 in LOCAL timezone
+      
+      console.log(`IndividualReport: Fetching attendance for employee ${employee.id} on ${today} (${year}-${month}-${day})`);
       
       // Always fetch today's attendance from RTDB
       const todayRef = ref(rtdb, `attendance/${employee.id}/${today}`);
       const todaySnap = await get(todayRef);
-      setTodayAttendance(todaySnap.exists() ? todaySnap.val() : null);
+      
+      if (todaySnap.exists()) {
+        const record = todaySnap.val();
+        // Normalize field names: support both 'in'/'out' AND 'checkIn'/'checkOut'
+        const normalizedData = {
+          checkIn: record.checkIn || record.in,
+          checkOut: record.checkOut || record.out,
+          autoClosedBySystem: record.autoClosedBySystem
+        };
+        console.log(`Found attendance for ${employee.id} on ${today}:`, normalizedData);
+        setTodayAttendance(normalizedData);
+      } else {
+        console.log(`No attendance found for ${employee.id} on ${today}`);
+        setTodayAttendance(null);
+      }
       
       if (view === "month") {
         await loadMonthlyData();
@@ -735,7 +903,7 @@ function IndividualReport({ employee, onClose }) {
         await loadCustomRangeData();
       }
     } catch (e) {
-      console.error(e);
+      console.error("Error loading attendance data:", e);
     } finally {
       setLoading(false);
     }
@@ -945,24 +1113,24 @@ function IndividualReport({ employee, onClose }) {
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600">Check In</p>
                   <p className="text-base sm:text-lg font-semibold text-gray-900">
-                    {formatTime(todayAttendance.in)}
+                    {formatTime(todayAttendance.checkIn)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600">Check Out</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {formatTime(todayAttendance.out)}
+                    {formatTime(todayAttendance.checkOut)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Half-Day</p>
                   {(() => {
                     // Calculate half-day status based on late minutes
-                    if (!todayAttendance.in) return <p className="text-lg font-semibold text-gray-400">No</p>;
+                    if (!todayAttendance.checkIn) return <p className="text-lg font-semibold text-gray-400">No</p>;
                     
                     const startTime = employee.startTime || "09:00";
                     const maxLateMins = employee.maxHalfDayCutMinutes || 120;
-                    const [inHour, inMin] = todayAttendance.in.split(":").map(Number);
+                    const [inHour, inMin] = todayAttendance.checkIn.split(":").map(Number);
                     const [startHour, startMin] = startTime.split(":").map(Number);
                     const inMinutes = inHour * 60 + inMin;
                     const startMinutes = startHour * 60 + startMin;
