@@ -1,5 +1,7 @@
 // app/page.js
 import React from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Spotlight } from "@/components/ui/spotlight";
 
@@ -8,18 +10,18 @@ export default function Home() {
     <main className="min-h-screen bg-white text-gray-900">
       {/* Navbar */}
   <nav className="flex justify-between items-center px-8 py-5 fixed w-full z-50 text-gray-900 bg-gradient-to-b from-white/80 via-white/40 to-transparent backdrop-blur-md">
-        <a href="/" className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group">
           <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600/10 ring-1 ring-indigo-200 group-hover:bg-indigo-600/20 transition">
-            <img src="/fingerprint.svg" alt="Attendio" className="h-6 w-6 text-indigo-600" />
+            <Image src="/fingerprint.svg" alt="Attendio" width={24} height={24} className="text-indigo-600" />
           </span>
           <span className="text-xl font-semibold tracking-tight">Attendio</span>
-        </a>
-        <a
+        </Link>
+        <Link
           href="/admin-login"
           className="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors"
         >
           Admin Login
-        </a>
+        </Link>
       </nav>
 
       {/* Hero Section */}
