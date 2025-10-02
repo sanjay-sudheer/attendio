@@ -15,11 +15,16 @@
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "firebase": "^12.3.0",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.2",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.22",
     "next": "15.5.4",
+    "papaparse": "^5.4.1",
     "react": "19.1.0",
+    "react-day-picker": "^9.11.0",
     "react-dom": "19.1.0",
+    "recharts": "^2.12.7",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
