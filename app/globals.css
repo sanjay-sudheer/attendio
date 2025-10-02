@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Custom breakpoint for extra small devices */
+@custom-media --xs (min-width: 475px);
+@custom-variant xs (media(--xs));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -118,6 +122,24 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Ensure responsive images */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Better touch targets on mobile */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 

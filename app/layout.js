@@ -14,6 +14,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Attendio - Smart IoT Fingerprint Attendance System",
   description: "Modern attendance tracking system using ESP32 and R307 fingerprint sensors. Real-time monitoring, automated enrollment, and comprehensive reporting dashboard.",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+  },
 };
 
 export default function RootLayout({ children }) {
