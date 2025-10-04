@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { rtdb, auth } from "@/lib/firebase";
 import { ref, set, onValue, remove, update, get } from "firebase/database";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,9 @@ import {
   Save,
   Trash2,
   X as XIcon,
-  LogOut
+  LogOut,
+  FileText,
+  Plus
 } from "lucide-react";
 
 function cls(...c) { return c.filter(Boolean).join(" "); }
@@ -1230,20 +1232,97 @@ function StatBox({ label, value, color }) {
   );
 }
 
-// Attendance Records List Component
+// Attendance Records List Component with Notes
 function AttendanceRecordsList({ records, loading, employee }) {
+  const [notes, setNotes] = useState({});
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteText, setNoteText] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+
+  useEffect(() => {
+    if (records && records.length > 0) {
+      loadNotesForRecords();
+    }
+  }, [records, employee.id]);
+
+  async function loadNotesForRecords() {
+    try {
+      const notesData = {};
+      for (const record of records) {
+        const noteRef = doc(db, "attendance_notes", `${employee.id}_${record.date}`);
+        const noteSnap = await getDoc(noteRef);
+        if (noteSnap.exists()) {
+          notesData[record.date] = noteSnap.data().note;
+        }
+      }
+      setNotes(notesData);
+    } catch (error) {
+      console.error("Error loading notes:", error);
+    }
+  }
+
+  async function handleSaveNote(date) {
+    if (!noteText.trim() && !notes[date]) return;
+    
+    setSavingNote(true);
+    try {
+      const noteRef = doc(db, "attendance_notes", `${employee.id}_${date}`);
+      
+      if (noteText.trim()) {
+        await setDoc(noteRef, {
+          employeeId: employee.id,
+          date: date,
+          note: noteText.trim(),
+          updatedAt: new Date().toISOString(),
+          updatedBy: auth.currentUser?.uid || "unknown"
+        });
+        setNotes({ ...notes, [date]: noteText.trim() });
+      } else {
+        // If empty, we're deleting the note
+        await setDoc(noteRef, {
+          employeeId: employee.id,
+          date: date,
+          note: "",
+          updatedAt: new Date().toISOString(),
+          updatedBy: auth.currentUser?.uid || "unknown"
+        });
+        const newNotes = { ...notes };
+        delete newNotes[date];
+        setNotes(newNotes);
+      }
+      
+      setEditingNote(null);
+      setNoteText("");
+    } catch (error) {
+      console.error("Error saving note:", error);
+      alert("Failed to save note. Please try again.");
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  function handleEditNote(date) {
+    setEditingNote(date);
+    setNoteText(notes[date] || "");
+  }
+
+  function handleCancelEdit() {
+    setEditingNote(null);
+    setNoteText("");
+  }
+
   if (loading) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-6 text-center">
-        <p className="text-gray-500">Loading records...</p>
+      <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-4 sm:p-6 text-center">
+        <p className="text-sm sm:text-base text-gray-500">Loading records...</p>
       </div>
     );
   }
 
   if (!records || records.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-6 text-center">
-        <p className="text-gray-500">No attendance records in this period</p>
+      <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-4 sm:p-6 text-center">
+        <p className="text-sm sm:text-base text-gray-500">No attendance records in this period</p>
       </div>
     );
   }
@@ -1271,50 +1350,202 @@ function AttendanceRecordsList({ records, loading, employee }) {
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 bg-white/60">
-        <h3 className="font-semibold text-gray-900">Daily Records ({records.length})</h3>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-white/60">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900">Daily Records ({records.length})</h3>
       </div>
-      <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+      <div className="divide-y divide-gray-100 max-h-[32rem] overflow-y-auto">
         {records.map((record) => {
           const halfDay = isHalfDay(record);
+          const hasNote = notes[record.date];
+          const isEditing = editingNote === record.date;
           
           return (
-            <div key={record.date} className="px-6 py-3 hover:bg-indigo-50/30 transition-colors">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="text-sm font-medium text-gray-900 min-w-[100px]">
+            <div key={record.date} className="px-3 sm:px-6 py-3 sm:py-4 hover:bg-indigo-50/30 transition-colors">
+              {/* Mobile Layout */}
+              <div className="flex flex-col gap-3 lg:hidden">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-gray-900">
                     {new Date(record.date).toLocaleDateString('en-US', { 
                       month: 'short', 
-                      day: 'numeric' 
+                      day: 'numeric',
+                      year: 'numeric'
                     })}
                   </div>
-                  <div className="flex gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">In: </span>
-                      <span className="font-medium text-gray-900">
-                        {formatTime(record.in)}
+                  <div className="flex gap-1.5">
+                    {halfDay && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                        Half Day
                       </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Out: </span>
-                      <span className="font-medium text-gray-900">
-                        {formatTime(record.out)}
+                    )}
+                    {!halfDay && record.in && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-200">
+                        Full Day
                       </span>
-                    </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  {halfDay && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-amber-200">
-                      Half Day
+                
+                <div className="flex gap-4 text-sm">
+                  <div className="flex-1">
+                    <span className="text-gray-600 text-xs">In: </span>
+                    <span className="font-medium text-gray-900 text-sm">
+                      {formatTime(record.in)}
                     </span>
-                  )}
-                  {!halfDay && record.in && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-200">
-                      Full Day
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-gray-600 text-xs">Out: </span>
+                    <span className="font-medium text-gray-900 text-sm">
+                      {formatTime(record.out)}
                     </span>
+                  </div>
+                </div>
+
+                {/* Note Section - Mobile */}
+                <div className="pt-2 border-t border-gray-100">
+                  {!isEditing ? (
+                    <div className="space-y-2">
+                      {hasNote && (
+                        <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-2">
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-3.5 w-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <p className="text-xs text-gray-700 flex-1 break-words">{notes[record.date]}</p>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleEditNote(record.date)}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors border border-indigo-200"
+                      >
+                        {hasNote ? <Edit className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                        {hasNote ? "Edit Note" : "Add Note"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <textarea
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Add a note for this day..."
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                        rows={3}
+                        disabled={savingNote}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleSaveNote(record.date)}
+                          disabled={savingNote}
+                          size="sm"
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-xs h-8"
+                        >
+                          {savingNote ? "Saving..." : "Save"}
+                        </Button>
+                        <Button
+                          onClick={handleCancelEdit}
+                          disabled={savingNote}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs h-8"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
+              </div>
+
+              {/* Desktop Layout */}
+              <div className="hidden lg:flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6 flex-1">
+                    <div className="text-sm font-medium text-gray-900 min-w-[120px]">
+                      {new Date(record.date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </div>
+                    <div className="flex gap-6 text-sm">
+                      <div>
+                        <span className="text-gray-600">In: </span>
+                        <span className="font-medium text-gray-900">
+                          {formatTime(record.in)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Out: </span>
+                        <span className="font-medium text-gray-900">
+                          {formatTime(record.out)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {!isEditing && (
+                      <button
+                        onClick={() => handleEditNote(record.date)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title={hasNote ? "Edit note" : "Add note"}
+                      >
+                        {hasNote ? <Edit className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                        {hasNote ? "Edit" : "Note"}
+                      </button>
+                    )}
+                    {halfDay && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                        Half Day
+                      </span>
+                    )}
+                    {!halfDay && record.in && (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-green-200">
+                        Full Day
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Note Section - Desktop */}
+                {(hasNote || isEditing) && (
+                  <div className="ml-[120px] mr-[180px]">
+                    {!isEditing ? (
+                      <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <FileText className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-gray-700 flex-1">{notes[record.date]}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <textarea
+                          value={noteText}
+                          onChange={(e) => setNoteText(e.target.value)}
+                          placeholder="Add a note for this day..."
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                          rows={3}
+                          disabled={savingNote}
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleSaveNote(record.date)}
+                            disabled={savingNote}
+                            size="sm"
+                            className="bg-indigo-600 hover:bg-indigo-700"
+                          >
+                            {savingNote ? "Saving..." : "Save Note"}
+                          </Button>
+                          <Button
+                            onClick={handleCancelEdit}
+                            disabled={savingNote}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
